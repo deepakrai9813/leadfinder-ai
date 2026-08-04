@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  name          String?
+  email         String   @unique
+  emailVerified DateTime?
+  password      String?
+  image         String?
+  googleId      String?  @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  accounts   Account[]
+  sessions   Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model BusinessLead {
+  id            String   @id @default(cuid())
+  businessName  String
+  businessType  String?
+  address       String?
+  phone         String?
+  email         String?
+  website       String?
+  hasWebsite    Boolean  @default(false)
+  websiteStatus String   @default("unknown")
+  searchQuery   String?
+  source        String?
+  notes         String?
+  rating        Int      @default(0)
+  status        String   @default("new")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  outreachMessages OutreachMessage[]
+}
+
+model OutreachMessage {
+  id            String   @id @default(cuid())
+  leadId        String
+  lead          BusinessLead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  messageType   String   @default("email")
+  subject       String?
+  content       String
+  status        String   @default("draft")
+  sentAt        DateTime?
+  serviceType   String
+  aiGenerated   Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model SearchHistory {
+  id            String   @id @default(cuid())
+  query         String
+  location      String?
+  businessType  String?
+  resultsCount  Int      @default(0)
+  createdAt     DateTime @default(now())
+}
+
+model UserProfile {
+  id            String   @id @default(cuid())
+  userId        String?   @unique
+  serviceName   String?
+  yourName      String?
+  yourEmail     String?
+  yourPhone     String?
+  yourWebsite   String?
+  companyDesc   String?
+  services      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
